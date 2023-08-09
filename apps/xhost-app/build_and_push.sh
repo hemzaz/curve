@@ -14,6 +14,9 @@ function push() {
   aws ecr describe-repositories --repository-names $REPO_NAME || aws ecr create-repository --repository-name $REPO_NAME
   docker push $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest
   echo "Image Address: $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest"
+
+  # Update the existing value in config.tfvars with the ECR repo name
+  sed -i "s|app_image_repository =.*|app_image_repository = \"$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME\"|" ../../infrastructure/config.tfvars
 }
 
 case "$1" in
