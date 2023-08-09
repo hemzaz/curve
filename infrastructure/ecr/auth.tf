@@ -4,12 +4,12 @@ data "aws_ecr_authorization_token" "example" {
 
 resource "kubernetes_secret" "ecr_auth" {
   metadata {
-    name = "ecr-auth"
+    name = var.k8s_secret_name
   }
 
   data = {
     ".dockerconfigjson" = data.aws_ecr_authorization_token.example.authorization_token
   }
 
-  type = "kubernetes.io/dockerconfigjson"
+  type = var.k8s_secret_type
 }

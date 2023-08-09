@@ -5,23 +5,42 @@ ACCOUNT_ID=$(shell aws sts get-caller-identity --query Account --output text)
 IMAGE_ADDRESS=$(ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com/$(REPO_NAME):latest
 
 # Targets
-.PHONY: build-image push-image provision-eks deploy-helm destroy-eks
+.PHONY: build-image push-image provision-bootstrap provision-ecr provision-eks provision-helm-setup cleanup
 
-all: provision-eks deploy-helm
+all: build-image push-image provision-bootstrap provision-ecr provision-eks provision-helm-setup
 
 build-image:
-	@cd apps/$(REPO_NAME) && ./build_and_push.sh Build
+	@cd apps/$(REPO_NAME) && docker build -t $(REPO_NAME) .
 
 push-image:
-	@cd apps/$(REPO_NAME) && ./build_and_push.sh Push
+	@if aws ecr describe-repositories --repository-names $(REPO_NAME) 2>&1 | grep -q 'RepositoryNotFoundException'; then \
+		echo "Repository does not exist. Proceeding with push."; \
+	else \
+		echo "Repository exists. Skipping login and push."; \
+		exit 0; \
+	fi
+	@aws ecr get-login-password --region $(REGION) | docker login --username AWS --password-stdin $(ACCOUNT_ID).dkr.ecr.$(REGION).amazonaws.com
+	@docker tag $(REPO_NAME):latest $(IMAGE_ADDRESS)
+	@docker push $(IMAGE_ADDRESS)
+
+provision-bootstrap:
+	@cd infrastructure/bootstrap && terraform init && terraform apply -var-file=../config.tfvars -auto-approve
+
+provision-ecr:
+	@cd infrastructure/ecr && terraform init && terraform apply -var-file=../config.tfvars -auto-approve
 
 provision-eks:
-	@cd infrastructure/eks-setup && terraform init && terraform apply -auto-approve
+	@cd infrastructure/eks-setup && terraform init && terraform apply -var-file=../config.tfvars -auto-approve
 
-deploy-helm:
-	@helm repo add stable https://charts.helm.sh/stable
-	@helm install mongodb stable/mongodb --set mongodbRootPassword=secretpassword,mongodbUsername=my-user,mongodbPassword=my-password,mongodbDatabase=my-database
-	@helm install xhost-app ./apps/$(REPO_NAME)/helm --set image.repository=$(IMAGE_ADDRESS)
+provision-helm-setup:
+	@if kubectl get ns | grep -q 'helm-setup'; then \
+		echo "Helm setup namespace already exists. Skipping provision."; \
+		exit 0; \
+	fi
+	@cd infrastructure/helm-setup && terraform init && terraform apply -var-file=../config.tfvars -auto-approve
 
-destroy-eks:
-	@cd infrastructure/eks-setup && terraform destroy -auto-approve
+cleanup:
+	@cd infrastructure/helm-setup && terraform destroy -var-file=../config.tfvars -auto-approve
+	@cd infrastructure/eks-setup && terraform destroy -var-file=../config.tfvars -auto-approve
+	@cd infrastructure/ecr && terraform destroy -var-file=../config.tfvars -auto-approve
+	@cd infrastructure/bootstrap && terraform destroy -var-file=../config.tfvars -auto-approve

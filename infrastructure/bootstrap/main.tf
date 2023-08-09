@@ -1,14 +1,14 @@
 provider "aws" {
-  region = "us-west-2"
+  region = var.aws_region
 }
 
 resource "aws_s3_bucket" "terraform_state" {
-  bucket = "my-terraform-state-bucket"
+  bucket = var.terraform_state_bucket
   acl    = "private"
 }
 
 resource "aws_dynamodb_table" "terraform_locks" {
-  name           = "terraform-up-and-running-locks"
+  name           = var.terraform_locks_name
   billing_mode   = "PAY_PER_REQUEST"
   hash_key       = "LockID"
   attribute {
@@ -16,3 +16,4 @@ resource "aws_dynamodb_table" "terraform_locks" {
     type = "S"
   }
 }
+

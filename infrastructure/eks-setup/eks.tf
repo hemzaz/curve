@@ -1,27 +1,25 @@
 module "eks" {
   source          = "terraform-aws-modules/eks/aws"
-  cluster_name    = "my-cluster"
-  cluster_version = "1.17"
+  cluster_name    = var.eks_cluster_name
+  cluster_version = var.eks_cluster_version
   subnets         = [aws_subnet.subnet.id]
 
   node_groups = {
     eks_nodes = {
-      desired_capacity = 2
-      max_capacity     = 3
-      min_capacity     = 1
-
-      instance_type = "t2.micro"
-      key_name      = var.key_name
-      subnet_ids    = [aws_subnet.subnet.id]
+      desired_capacity = var.eks_node_desired_capacity
+      max_capacity     = var.eks_node_max_capacity
+      min_capacity     = var.eks_node_min_capacity
+      instance_type    = var.eks_node_instance_type
+      key_name         = var.key_name
+      subnet_ids       = [aws_subnet.subnet.id]
     }
     eks_db_nodes = {
-      desired_capacity = 1
-      max_capacity     = 2
-      min_capacity     = 1
-
-      instance_type = "t2.micro"
-      key_name      = var.key_name
-      subnet_ids    = [aws_subnet.subnet.id]
+      desired_capacity = var.eks_db_node_desired_capacity
+      max_capacity     = var.eks_db_node_max_capacity
+      min_capacity     = var.eks_db_node_min_capacity
+      instance_type    = var.eks_db_node_instance_type
+      key_name         = var.key_name
+      subnet_ids       = [aws_subnet.subnet.id]
     }
   }
 }
