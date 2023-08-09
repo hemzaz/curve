@@ -1,11 +1,8 @@
 ---
-
-# Curve Project
-
+# Curve Project  
 This repository contains the infrastructure and application setup for the Curve project.
 
-## Directory Structure
-
+## Directory Structure  
 - **apps/**: Contains application-related files and configurations.
   - **xhost-app/**: Source code and Helm chart for the xhost-app.
   
