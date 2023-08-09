@@ -16,7 +16,14 @@ function push() {
   echo "Image Address: $ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME:latest"
 
   # Update the existing value in config.tfvars with the ECR repo name
-  sed -i "s|app_image_repository =.*|app_image_repository = \"$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME\"|" ../../infrastructure/config.tfvars
+  # Check for OS type to handle sed command differences
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    # macOS uses BSD sed
+    sed -i "" "s|app_image_repository =.*|app_image_repository = \"$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME\"|" ../../infrastructure/config.tfvars
+  else
+    # Linux uses GNU sed
+    sed -i "s|app_image_repository =.*|app_image_repository = \"$ACCOUNT_ID.dkr.ecr.$REGION.amazonaws.com/$REPO_NAME\"|" ../../infrastructure/config.tfvars
+  fi
 }
 
 case "$1" in
