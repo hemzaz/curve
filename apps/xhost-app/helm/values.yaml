@@ -1,0 +1,19 @@
+replicaCount: 1
+
+image:
+  repository: your_dockerhub_username/xhost-app
+  pullPolicy: IfNotPresent
+  tag: "latest"
+
+service:
+  type: ClusterIP
+  port: 8080
+
+ingress:
+  enabled: true
+  annotations: {}
+  hosts:
+    - host: chart-example.local
+      paths: ["/"]
+
+resources: {}

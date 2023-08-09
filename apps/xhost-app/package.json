@@ -1,0 +1,12 @@
+{
+  "name": "xhost-app",
+  "version": "1.0.0",
+  "description": "App to capture x-host header",
+  "main": "app.js",
+  "scripts": {
+    "start": "node app.js"
+  },
+  "dependencies": {
+    "express": "^4.17.1"
+  }
+}
